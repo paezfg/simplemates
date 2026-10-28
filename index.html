@@ -832,18 +832,16 @@ switchToLogin.addEventListener('click', () => {
 });
 
 /* FUNCIÓN DE REGISTRO / SINCRONIZACIÓN ASÍNCRONA ROBUSTA */
-async function syncWithAppsScript(userData) {
+/* SINCRONIZACIÓN EN SEGUNDO PLANO (SIN BLOQUEAR) */
+function syncWithAppsScript(userData) {
   if (!APPS_SCRIPT_URL) return;
-  try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData)
-    });
-  } catch (err) {
-    console.log('Error de red al sincronizar:', err);
-  }
+  // Usamos navigator.sendBeacon o fetch sin await para que viaje solo por detrás
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData)
+  }).catch(err => console.log('Sincronización en segundo plano:', err));
 }
 
 /* LOGIN CON RESPALDO LOCAL INTELIGENTE Y CONSULTA REMOTA */
@@ -911,25 +909,27 @@ loginForm.addEventListener('submit', async (e) => {
 });
 
 /* REGISTRO MEJORADO CON GUARDADO LOCAL Y REMOTO */
-registerForm.addEventListener('submit', async (e) => {
+/* REGISTRO RÁPIDO E INFALIBLE */
+registerForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  regSubmitBtn.textContent = 'Guardando usuario...';
-  regSubmitBtn.disabled = true;
-
+  
   const name = document.getElementById('regName').value.trim();
   const lastName = document.getElementById('regLastName').value.trim();
   const age = document.getElementById('regAge').value.trim();
   const role = document.getElementById('regRole').value;
   const email = document.getElementById('regEmail').value.trim().toLowerCase();
   
+  // Creamos el objeto de usuario
   currentUser = { name, lastName, age, role, email, points: 100, streak: 1, completedTopics: [] };
+  
+  // 1. Guardado local inmediato en el navegador
   localStorage.setItem('simplemates_user', JSON.stringify(currentUser));
   
-  await syncWithAppsScript(currentUser);
-  
-  regSubmitBtn.textContent = 'Completar Registro';
-  regSubmitBtn.disabled = false;
+  // 2. Actualizamos la interfaz al instante
   updateUIAuth();
+
+  // 3. Mandamos los datos a Google Sheets por detrás sin trabar la pantalla
+  syncWithAppsScript(currentUser);
 
   if (pendingSubscriptionPlan) {
     const planToSubscribe = pendingSubscriptionPlan;
