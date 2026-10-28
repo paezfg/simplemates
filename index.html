@@ -52,39 +52,32 @@ display: flex; align-items: center; justify-content: space-between; gap: 16px;
 .logo { 
   display: inline-flex; 
   align-items: center; 
-  gap: 1px; 
+  gap: 6px; 
   font-weight: 850; 
   font-size: 1.25rem; 
   letter-spacing: -.05em; 
   cursor: pointer; 
 }
 .logo-mark {
-  width: auto;         /* Se adapta al ancho real del PNG */
-  height: 34px;        /* Mantiene la altura justa de la barra */
-  background: transparent; /* Quitamos el fondo terracota */
-  box-shadow: none;    /* Quitamos la sombra de caja */
-  border-radius: 0;    /* Sin bordes forzados */
+  width: auto; 
+  height: 34px; 
+  background: transparent; 
+  box-shadow: none; 
+  border-radius: 0; 
   display: flex; 
   align-items: center; 
   flex-shrink: 0;
-  transform: translateY(-4px);
+  transform: translateY(-3px);
 }
 .logo-mark img { 
-  height: 100%;        /* Se ajusta a la altura del contenedor (38px) */
-  width: auto;         /* Respeta la proporción natural de tu PNG transparente */
-  object-fit: contain; /* Evita cualquier recorte o deformación */
+  height: 100%; 
+  width: auto; 
+  object-fit: contain; 
 }
 .logo span span { 
   color: var(--brand); 
 }
-/* .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 850; font-size: 1.25rem; letter-spacing: -.05em; cursor: pointer; }
-.logo-mark {
-width: 36px; height: 36px; border-radius: 12px; background: var(--brand); color: white;
-display: grid; place-items: center; font-weight: 900; font-size: 1.1rem;
-box-shadow: 0 5px 12px rgba(182,66,45,.2); overflow: hidden; flex-shrink: 0;
-}
-.logo-mark img { width: 100%; height: 100%; object-fit: cover; }
-.logo span span { color: var(--brand); } */
+
 .nav-links { display: flex; align-items: center; gap: 24px; color: #4e596c; font-size: .93rem; font-weight: 650; }
 .nav-links a:hover { color: var(--brand); }
 .nav-actions { display: flex; align-items: center; gap: 10px; }
@@ -498,19 +491,9 @@ footer { background: #fff; border-top: 1px solid var(--line); padding: 24px 0; }
 </div>
 <button class="text-link topic-action" type="button">Ver tabla de contenidos <span>→</span></button>
 </article>
-
-<!-- Modulo oculto hasta siguiente versión. Pendiente de incorporar agente IA -->
-<!-- ORIENTACIÓN -->
-<!-- <article class="year-card" data-search="ayuda apoyo profesor consulta repaso prueba" data-open-orientation-card style="justify-content: space-between;">
-<div class="year-top"><span class="year-pill">ORIENTACIÓN</span><span>✦</span></div>
-<h3>¿Necesitás orientación?</h3>
-<p>Contanos qué tema o eje estás viendo en el aula y te sugerimos el trayecto ideal para tu repaso.</p>
-<div class="topic-list"><span class="topic">Dudas de cátedra</span><span class="topic">Exámenes previos</span><span class="topic">Trayectos</span></div>
-<button class="text-link" type="button" style="border:0;background:transparent;padding:0;cursor:pointer">Pedir orientación <span>→</span></button>
-</article>
 </div>
 <div class="empty-search" id="emptySearch">No encontramos ese contenido en las unidades temáticas. Probá con otra palabra.</div>
-</div> -->
+</div>
 </section>
 
 <section id="metodo">
@@ -695,18 +678,18 @@ footer { background: #fff; border-top: 1px solid var(--line); padding: 24px 0; }
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
 <div>
 <label for="regName">Nombre</label>
-<input type="text" id="regName" placeholder="Ej.: Federico" required>
+<input type="text" id="regName" placeholder="Ej.: Serginho" required>
 </div>
 <div>
 <label for="regLastName">Apellido</label>
-<input type="text" id="regLastName" placeholder="Ej.: Paez" required>
+<input type="text" id="regLastName" placeholder="Ej.: Pistone" required>
 </div>
 </div>
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
 <div>
 <label for="regAge">Edad</label>
-<input type="number" id="regAge" placeholder="Ej.: 35" min="10" max="99" required>
+<input type="number" id="regAge" placeholder="Ej.: 16" min="10" max="99" required>
 </div>
 <div>
 <label for="regRole">Rol</label>
@@ -723,7 +706,7 @@ footer { background: #fff; border-top: 1px solid var(--line); padding: 24px 0; }
 <label for="regPassword">Clave / Contraseña</label>
 <input type="password" id="regPassword" placeholder="••••••••" required>
 
-<button class="btn btn-primary" type="submit" style="width:100%;margin-top:16px">Completar Registro</button>
+<button class="btn btn-primary" type="submit" style="width:100%;margin-top:16px" id="regSubmitBtn">Completar Registro</button>
 </form>
 
 <div style="text-align: center; margin-top: 16px; font-size: .85rem;">
@@ -796,6 +779,7 @@ const loginForm = document.getElementById('loginForm');
 const registerForm = document.getElementById('registerForm');
 const loginErrorMsg = document.getElementById('loginErrorMsg');
 const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+const regSubmitBtn = document.getElementById('regSubmitBtn');
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyCJA470yfApLGmNyH_BkWHq4ceAhUn3Fcv_hUkTrpkqPzlwjL97Te1bzqIXAj15jY/exec'; 
 
@@ -847,79 +831,104 @@ switchToLogin.addEventListener('click', () => {
   setTimeout(() => document.getElementById('loginEmail').focus(), 50);
 });
 
-function syncWithAppsScript(userData) {
+/* FUNCIÓN DE REGISTRO / SINCRONIZACIÓN ASÍNCRONA ROBUSTA */
+async function syncWithAppsScript(userData) {
   if (!APPS_SCRIPT_URL) return;
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData)
-  }).catch(err => console.log('Error de sincronización:', err));
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+  } catch (err) {
+    console.log('Error de red al sincronizar:', err);
+  }
 }
 
+/* LOGIN CON RESPALDO LOCAL INTELIGENTE Y CONSULTA REMOTA */
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const email = document.getElementById('loginEmail').value.trim();
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
   loginErrorMsg.style.display = 'none';
   loginSubmitBtn.textContent = 'Verificando...';
   loginSubmitBtn.disabled = true;
 
-  try {
-    const response = await fetch(`${APPS_SCRIPT_URL}?email=${encodeURIComponent(email)}`, {
-      method: 'GET',
-      redirect: 'follow'
-    });
-    const result = await response.json();
+  let foundUser = null;
 
-    if (result.status === 'success' && result.user) {
-      currentUser = result.user;
-      localStorage.setItem('simplemates_user', JSON.stringify(currentUser));
-      updateUIAuth();
-      authModal.classList.remove('open');
-      document.body.style.overflow = '';
-      alert(`¡Bienvenido de nuevo, ${currentUser.name}!`);
-    } else {
-      loginErrorMsg.innerHTML = `No hay un usuario asociado al mail. <button type="button" id="inlineRegisterBtn" style="background:none; border:0; color:var(--brand); font-weight:800; cursor:pointer; padding:0; text-decoration:underline;">¡Registrate acá!</button>`;
-      loginErrorMsg.style.display = 'block';
-      document.getElementById('inlineRegisterBtn').addEventListener('click', () => {
-        document.getElementById('regEmail').value = email;
-        loginView.style.display = 'none';
-        registerView.style.display = 'block';
-      });
-    }
-  } catch (error) {
-    let savedUser = JSON.parse(localStorage.getItem('simplemates_user'));
-    if (savedUser && savedUser.email === email) {
-      currentUser = savedUser;
-      updateUIAuth();
-      authModal.classList.remove('open');
-      document.body.style.overflow = '';
-    } else {
-      loginErrorMsg.innerHTML = `No hay usuario registrado. <button type="button" id="inlineRegisterBtn2" style="background:none; border:0; color:var(--brand); font-weight:800; cursor:pointer; padding:0; text-decoration:underline;">¡Registrate acá!</button>`;
-      loginErrorMsg.style.display = 'block';
-      document.getElementById('inlineRegisterBtn2').addEventListener('click', () => {
-        document.getElementById('regEmail').value = email;
-        loginView.style.display = 'none';
-        registerView.style.display = 'block';
-      });
-    }
-  } finally {
-    loginSubmitBtn.textContent = 'Ingresar';
-    loginSubmitBtn.disabled = false;
+  // 1. Verificación en el almacenamiento local del navegador (memoria rápida)
+  let savedUser = JSON.parse(localStorage.getItem('simplemates_user'));
+  if (savedUser && savedUser.email && savedUser.email.trim().toLowerCase() === email) {
+    foundUser = savedUser;
   }
+
+  // 2. Si no se encuentra en local, intentamos consultarlo al backend de Google Apps Script
+  if (!foundUser) {
+    try {
+      const response = await fetch(`${APPS_SCRIPT_URL}?email=${encodeURIComponent(email)}`, {
+        method: 'GET',
+        redirect: 'follow'
+      });
+      const textData = await response.text();
+      let result;
+      try {
+        result = JSON.parse(textData);
+      } catch(parseErr) {
+        result = { status: 'error' };
+      }
+
+      if (result.status === 'success' && result.user) {
+        foundUser = result.user;
+      }
+    } catch (error) {
+      console.log('Aviso de red (CORS o sin conexión): Usando modo offline/local.');
+    }
+  }
+
+  // 3. Resultado final del inicio de sesión
+  if (foundUser) {
+    currentUser = foundUser;
+    localStorage.setItem('simplemates_user', JSON.stringify(currentUser));
+    updateUIAuth();
+    authModal.classList.remove('open');
+    document.body.style.overflow = '';
+    alert(`¡Bienvenido de nuevo, ${currentUser.name}!`);
+  } else {
+    loginErrorMsg.innerHTML = `No hay un usuario registrado con esa casilla. <button type="button" id="inlineRegisterBtn" style="background:none; border:0; color:var(--brand); font-weight:800; cursor:pointer; padding:0; text-decoration:underline;">¡Registrate acá!</button>`;
+    loginErrorMsg.style.display = 'block';
+    const regBtn = document.getElementById('inlineRegisterBtn');
+    if(regBtn) {
+      regBtn.addEventListener('click', () => {
+        document.getElementById('regEmail').value = email;
+        loginView.style.display = 'none';
+        registerView.style.display = 'block';
+      });
+    }
+  }
+
+  loginSubmitBtn.textContent = 'Ingresar';
+  loginSubmitBtn.disabled = false;
 });
 
-registerForm.addEventListener('submit', (e) => {
+/* REGISTRO MEJORADO CON GUARDADO LOCAL Y REMOTO */
+registerForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+  regSubmitBtn.textContent = 'Guardando usuario...';
+  regSubmitBtn.disabled = true;
+
   const name = document.getElementById('regName').value.trim();
   const lastName = document.getElementById('regLastName').value.trim();
   const age = document.getElementById('regAge').value.trim();
   const role = document.getElementById('regRole').value;
-  const email = document.getElementById('regEmail').value.trim();
+  const email = document.getElementById('regEmail').value.trim().toLowerCase();
   
   currentUser = { name, lastName, age, role, email, points: 100, streak: 1, completedTopics: [] };
   localStorage.setItem('simplemates_user', JSON.stringify(currentUser));
-  syncWithAppsScript(currentUser);
+  
+  await syncWithAppsScript(currentUser);
+  
+  regSubmitBtn.textContent = 'Completar Registro';
+  regSubmitBtn.disabled = false;
   updateUIAuth();
 
   if (pendingSubscriptionPlan) {
